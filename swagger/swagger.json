@@ -1,0 +1,343 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "This is a simple REST API which provides weather observation data of a given location.",
+    "version" : "0.1",
+    "title" : "Weather service",
+    "contact" : {
+      "name" : "API Support",
+      "url" : "http://www.swagger.io/support",
+      "email" : "eajoensuu@gmail.com"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host" : "localhost:8080",
+  "basePath" : "/",
+  "schemes" : [ "https" ],
+  "consumes" : [ "application/json" ],
+  "produces" : [ "application/json", "text/html" ],
+  "paths" : {
+    "/weatherObservationsSimple" : {
+      "get" : {
+        "tags" : [ "weather" ],
+        "summary" : "Provides one set of the newest weather observations of the given location",
+        "description" : "Newest observations provided by the nearest available weather station are returned.",
+        "operationId" : "getWeatherSimple",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "lat",
+          "in" : "query",
+          "description" : "latitude of the location",
+          "required" : false,
+          "type" : "number",
+          "maximum" : 90,
+          "minimum" : -90,
+          "format" : "double"
+        }, {
+          "name" : "lon",
+          "in" : "query",
+          "description" : "longitude of the location",
+          "required" : false,
+          "type" : "number",
+          "maximum" : 180,
+          "minimum" : -180,
+          "format" : "double"
+        }, {
+          "name" : "placeName",
+          "in" : "query",
+          "description" : "Name of the location. Either lat/log or place name must be given to address the desired location.  If both lat/log and place name is given the given place name is used and lat/lon are ignored.",
+          "required" : false,
+          "type" : "string",
+          "maxLength" : 64,
+          "minLength" : 1,
+          "pattern" : "[a-z0-9]{1,64}/gi"
+        }, {
+          "name" : "time",
+          "in" : "query",
+          "description" : "desired observation date and time, default value is the actual datetime",
+          "required" : false,
+          "type" : "string",
+          "format" : "date-time"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/weatherHistory"
+            }
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "404" : {
+            "description" : "Thre are no active weather station availabe covering the addressed location"
+          },
+          "500" : {
+            "description" : "There is an internal Weather service API-server problem"
+          }
+        }
+      }
+    },
+    "/weatherObservationsByCoordinates" : {
+      "get" : {
+        "tags" : [ "weatherByCoordinates" ],
+        "summary" : "Provides weather observations of the given location",
+        "description" : "Observations of the nearest available weather station are returned.",
+        "operationId" : "getWeatherByCoordinates",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "latitude",
+          "in" : "query",
+          "description" : "latitude of the location",
+          "required" : true,
+          "type" : "number",
+          "maximum" : 90,
+          "minimum" : -90,
+          "format" : "double"
+        }, {
+          "name" : "longitude",
+          "in" : "query",
+          "description" : "longitude of the location",
+          "required" : true,
+          "type" : "number",
+          "maximum" : 180,
+          "minimum" : -180,
+          "format" : "double"
+        }, {
+          "name" : "startTime",
+          "in" : "query",
+          "description" : "observation series start time, default value is the actual date at time 00:00",
+          "required" : false,
+          "type" : "string",
+          "format" : "date-time"
+        }, {
+          "name" : "endTime",
+          "in" : "query",
+          "description" : "observation series end time, default value is the actual date and time",
+          "required" : false,
+          "type" : "string",
+          "format" : "date-time"
+        }, {
+          "name" : "period",
+          "in" : "query",
+          "description" : "observation period in minutes",
+          "required" : false,
+          "type" : "integer",
+          "default" : "10.0",
+          "maximum" : 60,
+          "minimum" : 1,
+          "format" : "int32"
+        }, {
+          "name" : "pagingInUse",
+          "in" : "query",
+          "description" : "defines if response values paging is used",
+          "required" : false,
+          "type" : "boolean",
+          "default" : false
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "amount of the returned items in one go",
+          "required" : false,
+          "type" : "integer",
+          "default" : 50,
+          "format" : "int64"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/weatherHistory"
+            }
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "404" : {
+            "description" : "Thre are no active weather sations availabe at addressed location"
+          },
+          "500" : {
+            "description" : "There is an internal API server problem"
+          }
+        }
+      }
+    },
+    "/weatherObservations/{cityName}" : {
+      "get" : {
+        "tags" : [ "weatherByName" ],
+        "summary" : "Returns weather history of the given city",
+        "description" : "This provides weather observations of the given named location. Observations of all active weather stations on the addressed location are returned.",
+        "operationId" : "getWeatherByCityName",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "cityName",
+          "in" : "path",
+          "description" : "name of the city",
+          "required" : true,
+          "type" : "string",
+          "maxLength" : 64,
+          "minLength" : 1,
+          "pattern" : "[a-z0-9]{8,64}/gi"
+        }, {
+          "name" : "startTime",
+          "in" : "query",
+          "description" : "observation series start time, default value is the actual date at time 00:00",
+          "required" : false,
+          "type" : "string",
+          "format" : "date-time"
+        }, {
+          "name" : "endTime",
+          "in" : "query",
+          "description" : "observation series end time, default value is the actual date and time",
+          "required" : false,
+          "type" : "string",
+          "format" : "date-time"
+        }, {
+          "name" : "period",
+          "in" : "query",
+          "description" : "observation period in minutes",
+          "required" : false,
+          "type" : "integer",
+          "default" : "10.0",
+          "maximum" : 60,
+          "minimum" : 1,
+          "format" : "int64"
+        }, {
+          "name" : "pagingInUse",
+          "in" : "query",
+          "description" : "defines if response values paging is used",
+          "required" : false,
+          "type" : "boolean",
+          "default" : false
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "amount of the returned items in one go",
+          "required" : false,
+          "type" : "integer",
+          "default" : 50,
+          "format" : "int64"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/weatherHistory"
+            }
+          },
+          "400" : {
+            "description" : "Bad request. Location name must be a string of 1..64 characters"
+          },
+          "404" : {
+            "description" : "Location with the specified ID is not supported"
+          },
+          "500" : {
+            "description" : "There is an internal API server problem"
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "weatherHistory" : {
+      "type" : "object",
+      "properties" : {
+        "placeName" : {
+          "type" : "string",
+          "description" : "name of the observed place"
+        },
+        "observedPlaceGPSCordinates" : {
+          "$ref" : "#/definitions/GPSCoordinates"
+        },
+        "weatherStationName" : {
+          "type" : "string",
+          "description" : "name of the observation weather station"
+        },
+        "weatherStationGPSCordinates" : {
+          "$ref" : "#/definitions/GPSCoordinates"
+        },
+        "locationDistanceToStation" : {
+          "type" : "number",
+          "format" : "double",
+          "description" : "location distance to observation station (m)"
+        },
+        "weatherObservations" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/observation"
+          }
+        }
+      }
+    },
+    "observation" : {
+      "type" : "object",
+      "properties" : {
+        "observationTime" : {
+          "type" : "string",
+          "format" : "date-time",
+          "description" : "observation timestamp"
+        },
+        "temperature" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "air temperature C"
+        },
+        "relative humidity" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "relative air humidity"
+        },
+        "windSpeed" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "wind speed m/s ( 10 min average )"
+        },
+        "windGustSpeed" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "wind gusts speed m/s ( 10 min average )"
+        },
+        "cloudCoverage" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "cloud coverage, scale 1/8 ( 1 clear..8 full cloydy )"
+        }
+      }
+    },
+    "GPSCoordinates" : {
+      "properties" : {
+        "lat" : {
+          "type" : "number",
+          "format" : "double"
+        },
+        "lon" : {
+          "type" : "number",
+          "format" : "double"
+        }
+      }
+    },
+    "Paging" : {
+      "properties" : {
+        "totalItems" : {
+          "type" : "integer",
+          "format" : "int32\""
+        },
+        "totalPages" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "pageSize" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "currentPage" : {
+          "type" : "integer",
+          "format" : "int32"
+        }
+      }
+    }
+  }
+}
