@@ -1,7 +1,7 @@
 {
   "swagger" : "2.0",
   "info" : {
-    "description" : "This is a simple REST API which provides weather observation data of a given location.",
+    "description" : "This is a simple REST API which provides weather observation data of a given location in Finland area.",
     "version" : "0.1",
     "title" : "Weather service",
     "contact" : {
